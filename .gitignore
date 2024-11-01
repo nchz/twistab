@@ -1,3 +1,6 @@
+*.min.css
+*.min.js
+
 **/*~
 **/.*
 !.gitignore

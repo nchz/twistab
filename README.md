@@ -2,6 +2,12 @@
 
 Organize your tabs in a few clicks.
 
+## Setup
+
+```bash
+curl 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js' -o ./src/lib/bootstrap.bundle.min.js
+```
+
 ## Local development
 
 See how to load a web browser extension from your local:

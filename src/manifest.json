@@ -6,7 +6,10 @@
   "icons": {
     "128": "images/twistab.png"
   },
-  "action": {},
+  "action": {
+    "default_icon": "images/twistab.png",
+    "default_popup": "popup.html"
+  },
   "background": {
     "type": "module",
     "service_worker": "background.js"
