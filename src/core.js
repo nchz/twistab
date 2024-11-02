@@ -1,10 +1,10 @@
-async function handleTab(tab) {
+async function handleTab(tab, discardDups, browseAllWindows) {
   // Get current tab details.
   const { id: currentTabId, url: currentTabUrl } = tab
 
   // Create a new window to move the tabs there.
   const newWindow = await chrome.windows.create({
-    focused: false,
+    focused: true,
     //
     // NOTE: popup is closed when current tab is (re)moved, and this execution
     //       is interrupted. So we can't move the current tab now.
@@ -17,15 +17,29 @@ async function handleTab(tab) {
     //
   })
 
-  // Find other tabs in current window with the same domain as current tab.
+  // Find other tabs with the same domain as current tab.
   const currentUrl = new URL(currentTabUrl)
-  const matchedTabs = await chrome.tabs.query({
+  const queryOptions = {
     url: `*://${currentUrl.host}/*`,
-    active: false,
-    // TODO: Validate which one to use.
-    // lastFocusedWindow: true,
-    currentWindow: true,
-  })
+  }
+  if (!browseAllWindows) {
+    queryOptions.currentWindow = true
+  }
+
+  var matchedTabs = await chrome.tabs.query(queryOptions)
+  matchedTabs = matchedTabs.filter((tab) => tab.id != currentTabId)
+
+  if (discardDups) {
+    matchedTabs = matchedTabs.reduce((acc, cur) => {
+      const existing = new Set(acc.map((tab) => tab.url))
+      if (existing.has(cur.url) || cur.url == currentTabUrl) {
+        chrome.tabs.remove(cur.id)
+      } else {
+        acc.push(cur)
+      }
+      return acc
+    }, [])
+  }
 
   // Move extra tabs at the end of the new window.
   if (matchedTabs.length != 0) {
@@ -35,8 +49,8 @@ async function handleTab(tab) {
     )
   }
 
-  // NOTE: When invoked from the popup, this will close the popup and thus end
-  //       the main script execution.
+  // NOTE: When invoked from the popup, this will close the popup and thus
+  //       terminate the execution.
   await chrome.tabs.remove(currentTabId)
 }
 

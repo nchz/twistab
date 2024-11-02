@@ -7,64 +7,32 @@
     <!-- <link rel="stylesheet" href="popup.css" /> -->
   </head>
 
-  <body class="container" style="width: 280px; height: 150px">
+  <body class="container" style="width: 280px">
     <div class="row">
       <div class="container mt-1 ms-2">
         <div class="row form-check form-switch">
-          <input class="form-check-input" type="checkbox" checked id="checkbox-discard-dups" />
-          <label class="form-check-label" for="checkbox-discard-dups">Discard duplicated tabs</label>
+          <input class="form-check-input" type="checkbox" checked id="flag-discard-dups" />
+          <label class="form-check-label" for="flag-discard-dups">Discard duplicated tabs</label>
         </div>
         <div class="row form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="checkbox-browse-all-windows" />
-          <label class="form-check-label" for="checkbox-browse-all-windows">Browse in all windows</label>
+          <input class="form-check-input" type="checkbox" id="flag-browse-all-windows" />
+          <label class="form-check-label" for="flag-browse-all-windows">Browse in all windows</label>
         </div>
       </div>
     </div>
 
     <div class="row">
       <div class="container mt-1 btn-group" role="group">
-        <button type="button" class="row rounded-0 btn btn-primary" id="button-move-tabs">Move tabs</button>
-        <div class="row w-25 btn-group" role="group">
+        <button type="button" class="row rounded-0 btn btn-primary" id="btn-move-tabs">Move tabs</button>
+        <!-- <div class="row w-25 btn-group" role="group">
           <button class="rounded-0 btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-          <div class="rounded-0 dropdown-menu">
+          <div class="rounded-0 dropdown-menu" id="dropdown-items">
             <a class="dropdown-item" href="#">#1</a>
             <a class="dropdown-item" href="#">#2</a>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
-
-    <div class="row">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col">
-              <label class="form-check">
-                <input class="form-check-input" type="checkbox" id="cbox-select-all" />
-              </label>
-            </th>
-            <th scope="col">Domain</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">
-              <label class="form-check">
-                <input class="form-check-input" type="checkbox" checked />
-              </label>
-            </th>
-            <td>example.com</td>
-          </tr>
-          <tr>
-            <th scope="row">
-              <label class="form-check">
-                <input class="form-check-input" type="checkbox" />
-              </label>
-            </th>
-            <td>some.domain.com</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </body>
+  <script type="module" src="popup.js"></script>
 </html>
