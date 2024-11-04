@@ -1,22 +1,17 @@
-async function getCurrentTab() {
-  const [tab] = await chrome.tabs.query({
-    currentWindow: true,
-    active: true,
-  })
-  return tab
-}
-
 async function findMatchingTabs(forTab, browseAllWindows) {
   // Find other tabs with the same domain as current tab.
   const { host } = new URL(forTab.url)
   const queryOptions = {
     url: `*://${host}/*`,
+    // TODO: "*://" doesn't match "chrome://*" anf Firefox's equivalent URL patterns.
   }
   if (!browseAllWindows) {
     queryOptions.currentWindow = true
   }
   return await chrome.tabs.query(queryOptions)
 }
+
+// Main
 
 async function twist(currentTab, browseAllWindows, discardDups) {
   // Create a new window to move the tabs there.
@@ -64,4 +59,4 @@ async function twist(currentTab, browseAllWindows, discardDups) {
   await chrome.tabs.remove(currentTab.id)
 }
 
-export { getCurrentTab, findMatchingTabs, twist }
+export { findMatchingTabs, twist }

@@ -8,8 +8,9 @@
   </head>
 
   <body class="container" style="width: 280px">
+    <!- Settings panel -->
     <div class="row">
-      <div class="container mt-1 ms-2">
+      <div class="col mt-1 ms-2">
         <div class="row form-check form-switch">
           <input class="form-check-input" type="checkbox" checked id="flag-discard-dups" />
           <label class="form-check-label" for="flag-discard-dups">Discard duplicated tabs</label>
@@ -21,17 +22,30 @@
       </div>
     </div>
 
+    <!-- Main button -->
     <div class="row">
-      <div class="container mt-1 btn-group" role="group">
-        <button type="button" class="row rounded-0 btn btn-primary" id="btn-move-tabs">Move tabs</button>
+      <div class="col mt-1 btn-group" role="group">
+        <button type="button" class="row rounded-0 btn btn-primary" id="button-move-tabs">Move tabs</button>
         <!-- <div class="row w-25 btn-group" role="group">
           <button class="rounded-0 btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
           <div class="rounded-0 dropdown-menu" id="dropdown-items">
-            <a class="dropdown-item" href="#">#1</a>
-            <a class="dropdown-item" href="#">#2</a>
           </div>
         </div> -->
       </div>
+    </div>
+
+    <!-- Select buttons -->
+    <div class="row">
+      <button type="button" class="col rounded-0 disabled btn btn-light">Select:</button>
+      <button type="button" class="col rounded-0 btn btn-outline-secondary" id="button-select-all">All</button>
+      <button type="button" class="col rounded-0 btn btn-outline-secondary" id="button-invert-selection">Invert</button>
+    </div>
+
+    <!-- Domain list -->
+    <div class="row">
+      <table class="table table-hover">
+        <tbody id="domain-list"></tbody>
+      </table>
     </div>
   </body>
   <script type="module" src="popup.js"></script>
