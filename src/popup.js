@@ -1,4 +1,4 @@
-import { findMatchingTabs, twist } from "./core.js"
+import { findTabsForHostnames, twist } from "./core.js"
 
 // TODO: Move to "popup/utils.js" or so.
 
@@ -12,6 +12,12 @@ async function getCurrentTab() {
   return tab
 }
 
+async function getCurrentWindowTabs() {
+  const tabs = await chrome.tabs.query({ currentWindow: true })
+  // NOTE: Keep only "http" and "https" URLs.
+  return tabs.filter((t) => ["http:", "https:"].includes(new URL(t.url).protocol))
+}
+
 const getFlagDiscardDups = () => document.getElementById("flag-discard-dups").checked
 const getFlagBrowseAllWindows = () => document.getElementById("flag-browse-all-windows").checked
 
@@ -19,29 +25,31 @@ const getFlagBrowseAllWindows = () => document.getElementById("flag-browse-all-w
 
 const currentTab = await getCurrentTab()
 const { url: currentUrl, favIconUrl: currentFavIconUrl } = currentTab
-const { host: currentDomain } = new URL(currentUrl)
+const { host: currentTabHost, origin: currentTabOrigin } = new URL(currentUrl)
 
-const tabList = await chrome.tabs.query({ currentWindow: true })
-const tabDomainList = tabList.reduce(
+const curWindowTabs = await getCurrentWindowTabs()
+const curWindowTabHosts = curWindowTabs.reduce(
   (acc, cur) => {
-    const { host } = new URL(cur.url)
-    const iconUrl = cur.favIconUrl
-    if (acc.filter((t) => t[0] == host).length == 0) {
-      acc.push([host, iconUrl])
+    const { host: curHostname } = new URL(cur.url)
+    const { favIconUrl: iconUrl } = cur
+    if (!acc.map(([host, _]) => host).includes(curHostname)) {
+      acc.push([curHostname, iconUrl])
     }
     return acc
   },
-  [[currentDomain, currentFavIconUrl]]
+  [[currentTabHost, currentFavIconUrl]]
 )
 
 // Main button
 
 const buttonMoveTabs = document.getElementById("button-move-tabs")
 
-const setButtonText = async () => {
+async function setButtonText(selectedHostnames) {
   const discardDups = getFlagDiscardDups()
   const browseAllWindows = getFlagBrowseAllWindows()
-  const tabs = await findMatchingTabs(currentTab, browseAllWindows)
+
+  const hostnames = selectedHostnames != undefined ? selectedHostnames : getSelectedHosts()
+  const tabs = await findTabsForHostnames(hostnames, browseAllWindows)
 
   var tabCount
   if (discardDups) {
@@ -58,41 +66,70 @@ const setButtonText = async () => {
   }
 }
 
-await setButtonText()
+await setButtonText([currentTabHost])
 
-buttonMoveTabs.addEventListener("click", () => {
-  const browseAllWindows = getFlagBrowseAllWindows()
+buttonMoveTabs.addEventListener("click", async () => {
   const discardDups = getFlagDiscardDups()
-  twist(currentTab, browseAllWindows, discardDups)
+  const browseAllWindows = getFlagBrowseAllWindows()
+
+  const selectedHostnames = getSelectedHosts()
+  const tabs = await findTabsForHostnames(selectedHostnames, browseAllWindows)
+  const tabIds = tabs.map((tab) => tab.id)
+
+  var orderedTabs
+  if (tabIds.includes(currentTab.id)) {
+    orderedTabs = [currentTab, ...tabs.filter((tab) => tab.id != currentTab.id)]
+  } else {
+    orderedTabs = tabs
+  }
+
+  await twist(orderedTabs, discardDups)
 })
 
 // Settings panel
 
 const flagDiscardDups = document.getElementById("flag-discard-dups")
 const flagBrowseAllWindows = document.getElementById("flag-browse-all-windows")
-flagDiscardDups.addEventListener("change", setButtonText)
-flagBrowseAllWindows.addEventListener("change", setButtonText)
+flagDiscardDups.addEventListener("change", () => {
+  setButtonText()
+})
+flagBrowseAllWindows.addEventListener("change", () => {
+  setButtonText()
+})
 
 // Select buttons
 
 const buttonSelectAll = document.getElementById("button-select-all")
 const buttonInvertSelection = document.getElementById("button-invert-selection")
 buttonSelectAll.addEventListener("click", () => {
-  domainList.querySelectorAll("input[type='checkbox']").forEach((c) => {
+  hostnameList.querySelectorAll("input[type='checkbox']").forEach((c) => {
     c.checked = true
   })
+  setButtonText()
 })
 buttonInvertSelection.addEventListener("click", () => {
-  domainList.querySelectorAll("input[type='checkbox']").forEach((c) => {
+  hostnameList.querySelectorAll("input[type='checkbox']").forEach((c) => {
     c.checked = !c.checked
   })
+  setButtonText()
 })
 
-// Domain list
+function getSelectedHosts() {
+  const checkboxes = Array.from(hostnameList.querySelectorAll("input[type='checkbox']"))
+  const checkedRows = checkboxes.filter((c) => c.checked)
+  const selectedHostnames = checkedRows.map((c) => {
+    const th = c.parentElement
+    const td = th.nextElementSibling
+    return td.textContent
+  })
+  return selectedHostnames
+}
 
-const domainList = document.getElementById("domain-list")
+// Hostname list
 
-tabDomainList.forEach(([host, iconUrl]) => {
+const hostnameList = document.getElementById("hostname-list")
+
+curWindowTabHosts.forEach(([host, iconUrl]) => {
   const row = document.createElement("tr")
 
   // Checkbox cell
@@ -102,30 +139,30 @@ tabDomainList.forEach(([host, iconUrl]) => {
   checkbox.id = host
   checkbox.className = "form-check"
   checkbox.type = "checkbox"
-  checkbox.checked = host == currentDomain
+  checkbox.checked = host == currentTabHost
 
   checkboxCell.appendChild(checkbox)
 
-  // Domain cell
-  const domainCell = document.createElement("td")
+  // Hostname cell
+  const hostnameCell = document.createElement("td")
   // Favicon
   const icon = document.createElement("img")
   icon.src = iconUrl
-  // icon.className = "favicon"
   icon.style.width = "16px"
   icon.style.height = "16px"
   icon.style.marginRight = "8px"
 
-  domainCell.appendChild(icon)
-  domainCell.appendChild(document.createTextNode(host))
+  hostnameCell.appendChild(icon)
+  hostnameCell.appendChild(document.createTextNode(host))
 
   row.appendChild(checkboxCell)
-  row.appendChild(domainCell)
-  domainList.appendChild(row)
+  row.appendChild(hostnameCell)
+  hostnameList.appendChild(row)
 
   // Toggle checkbox when row is clicked.
   row.addEventListener("click", () => {
     checkbox.checked = !checkbox.checked
+    setButtonText()
   })
   // Prevent event propagation to avoid double toggling when clicking directly on the checkbox.
   checkbox.addEventListener("click", (event) => {
