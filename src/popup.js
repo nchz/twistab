@@ -40,6 +40,11 @@ const curWindowTabHosts = curWindowTabs.reduce(
   [[currentTabHost, currentFavIconUrl]]
 )
 
+// Error messages panel
+
+const errorMessagesPanel = document.getElementById("error-messages-panel")
+const errorMessage = document.getElementById("error-message")
+
 // Main button
 
 const buttonMoveTabs = document.getElementById("button-move-tabs")
@@ -68,7 +73,7 @@ async function setButtonText(selectedHostnames) {
 
 await setButtonText([currentTabHost])
 
-buttonMoveTabs.addEventListener("click", async () => {
+async function main() {
   const discardDups = getFlagDiscardDups()
   const browseAllWindows = getFlagBrowseAllWindows()
 
@@ -84,6 +89,15 @@ buttonMoveTabs.addEventListener("click", async () => {
   }
 
   await twist(orderedTabs, discardDups)
+}
+
+buttonMoveTabs.addEventListener("click", async () => {
+  try {
+    await main()
+  } catch (err) {
+    errorMessage.textContent = err.message
+    errorMessagesPanel.classList.remove("d-none")
+  }
 })
 
 // Settings panel
